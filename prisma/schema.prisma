@@ -14,176 +14,113 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-
-// Model untuk Authentication/User (Simplified untuk single user)
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
   password  String
-  name      String   // Wajib, tidak optional
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@map("users")
+  Profile Profile[]
 }
 
-// Model untuk Home Section
-model Home {
+model Profile {
+  id          String   @id @default(cuid())
+  name        String
+  title       String
+  bio         String
+  image       String?
+  email       String
+  phone       String?
+  location    String?
+  socialLinks String?
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Project {
   id          String   @id @default(cuid())
   title       String
-  subtitle    String
   description String
-  heroImage   String?   
-  ctaText     String?
-  ctaLink     String?
+  image       String
+  technologies String[]
+  projectUrl  String?
+  githubUrl   String?
+  category    String
+  featured    Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
-  @@map("home")
-}
-
-// Model untuk Featured Projects di Home Section
-model FeaturedProject {
-  id          String   @id @default(cuid())
-  title       String
-  shortDescription String
-  thumbnail   String   
-  route       String   
-  order       Int      @default(0) 
-  workId      String?  
-  work        Work?    @relation(fields: [workId], references: [id], onDelete: SetNull)
-
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@map("featured_projects")
-}
-
-// Model untuk About Section
-model About {
-  id           String   @id @default(cuid())
-  title        String
-  description  String
-  profileImage String?   // URL ke gambar profil
-  resumeUrl    String?  // URL ke file CV/Resume
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  // Relasi ke SocialMedia dan Experience
-  socialMedias SocialMedia[]
-  experiences  Experience[]
-  skills       Skill[]
-
-  @@map("about")
-}
-
-model SocialMedia {
-  id      String @id @default(cuid())
-  name    String
-  url     String
-  icon    String? 
-  aboutId String
-
-  about About @relation(fields: [aboutId], references: [id], onDelete: Cascade)
-
-  @@map("social_media")
 }
 
 model Experience {
+  id           String   @id @default(cuid())
+  company      String
+  position     String
+  description  String
+  startDate    DateTime
+  endDate      DateTime?
+  current      Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Education {
   id          String   @id @default(cuid())
-  company     String
-  position    String
-  description String?
+  institution String
+  degree      String
+  field       String
   startDate   DateTime
   endDate     DateTime?
   current     Boolean  @default(false)
-  aboutId     String
-
-  about About @relation(fields: [aboutId], references: [id], onDelete: Cascade)
-
-  @@map("experiences")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
-// Model Skill yang disederhanakan
 model Skill {
-  id        String   @id @default(cuid())
-  name      String   
-  aboutId   String
-  icon      String?
-  about About @relation(fields: [aboutId], references: [id], onDelete: Cascade)
-
-  @@map("skills")
+  id         String   @id @default(cuid())
+  name       String
+  category   String
+  proficiency Int     // 1-5 scale
+  icon       String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
-// Model untuk Work/Portfolio Section
-model Work {
-  id           String   @id @default(cuid())
-  title        String
-  description  String
-  content      String?  
-  imageUrl     String?   
-  category     String
-  technologies String[] 
-  projectUrl   String?  
-  githubUrl    String?  
-  featured     Boolean  @default(false)
-  published    Boolean  @default(false)
-  order        Int      @default(0) // Untuk mengurutkan tampilan
-  slug         String?   @unique // Slug untuk route URL
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  publishedAt  DateTime?
-
-  // Relasi ke GalleryImage
-  gallery GalleryImage[]
-
-  // Relasi ke FeaturedProject (optional)
-  featuredIn FeaturedProject[]
-
-  @@map("works")
-}
-
-model GalleryImage {
-  id     String @id @default(cuid())
-  url    String?
-  alt    String?
-  workId String
-
-  work Work @relation(fields: [workId], references: [id], onDelete: Cascade)
-
-  @@map("gallery_images")
-}
-
-// Model untuk Contact Section
-model Contact {
-  id           String   @id @default(cuid())
-  email        String
-  phone        String?
-  address      String?
-  mapEmbedUrl  String?  // URL embed map (Google Maps, dll)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  @@map("contact")
-}
-
-model ContactMessage {
+model Testimonial {
   id        String   @id @default(cuid())
   name      String
-  email     String
-  subject   String
-  message   String
-  read      Boolean  @default(false)
+  position  String
+  company   String
+  content   String
+  image     String?
+  approved  Boolean  @default(false)
   createdAt DateTime @default(now())
-
-  @@map("contact_messages")
+  updatedAt DateTime @updatedAt
 }
 
-// Model untuk Site Settings (opsional)
-model SiteSetting {
-  id    String @id @default(cuid())
-  key   String @unique
-  value String
-
-  @@map("site_settings")
+model Settings {
+  id              String   @id @default(cuid())
+  themeColor      String?
+  seoTitle        String?
+  seoDescription  String?
+  socialLinks     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
+
+model Blog {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  excerpt     String?
+  image       String?
+  category    String
+  tags        String[]
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+

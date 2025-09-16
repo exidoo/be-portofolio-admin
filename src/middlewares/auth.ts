@@ -11,13 +11,15 @@ const verifyToken = (req: AuthRequest, res: Response, next: NextFunction) => {
   // Get token
   const token = req.headers["authorization"];
   if (!token) {
-    return res.status(401).json({ message: "Unauthenticated." });
+    res.status(401).json({ message: "Unauthenticated." });
+    return;
   }
 
   // Verify token
   jwt.verify(token, process.env.JWT_SECRET as string, (err, decoded) => {
     if (err || !decoded) {
-      return res.status(401).json({ message: "Invalid token" });
+      res.status(401).json({ message: "Invalid token" });
+      return;
     }
 
     // kalau decoded.id ada, simpan ke req.userId

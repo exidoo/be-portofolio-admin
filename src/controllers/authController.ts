@@ -19,7 +19,7 @@ export const register = async (req: Request, res: Response) => {
     if (!parsed.success) {
       return res
         .status(400)
-        .json({ message: "Invalid input", errors: parsed.error.format() });
+        .json({ message: "Invalid input", errors: parsed.error.flatten() });
     }
     const { name, email, password } = req.body;
 
@@ -33,7 +33,6 @@ export const register = async (req: Request, res: Response) => {
 
     const user = await prisma.user.create({
       data: {
-        name,
         email,
         password: hashed,
       },
@@ -43,6 +42,7 @@ export const register = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ message: "Register failed", error });
   }
+  return;
 };
 
 export const login = async (req: Request, res: Response) => {
@@ -51,7 +51,7 @@ export const login = async (req: Request, res: Response) => {
     if (!parsed.success) {
       return res
         .status(400)
-        .json({ message: "Invalid input", errors: parsed.error.flatten });
+        .json({ message: "Invalid input", errors: parsed.error.flatten() });
     }
 
     const { email, password } = req.body;
@@ -70,4 +70,5 @@ export const login = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ message: "Login failed", error });
   }
+  return;
 };
