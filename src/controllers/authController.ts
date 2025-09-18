@@ -11,7 +11,7 @@ import prisma from "../../prisma/client";
 // Validators
 import { registerSchema, loginSchema } from "../utils/validators/authValidator";
 
-const JWT_SECRET = process.env.JWT_SECRET || "cafe_secret";
+const JWT_SECRET = process.env.JWT_SECRET || "portofolio_secret";
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -62,8 +62,14 @@ export const login = async (req: Request, res: Response) => {
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(401).json({ message: "Invalid credentials" });
 
-    const token = jwt.sign({ id: user.id }, JWT_SECRET, {
-      expiresIn: "7d",
+    const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: "15m" });
+    const refreshToken = jwt.sign({ id: user.id }, JWT_SECRET, {
+      expiresIn: "30d",
+    });
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
     });
 
     res.json({ message: "Login successful", token });
