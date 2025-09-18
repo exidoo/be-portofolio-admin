@@ -8,13 +8,13 @@ const projectController_1 = require("../controllers/projectController");
 const auth_1 = __importDefault(require("../middlewares/auth"));
 const router = express_1.default.Router();
 // GET /api/projects
-router.get("/", projectController_1.getAllProjects);
+router.get("/projects", projectController_1.getAllProjects);
 // GET /api/projects/:id
-router.get("/:id", projectController_1.getProjectById);
+router.get("/projects/:id", projectController_1.getProjectById);
 // POST /api/projects
-router.post("/", auth_1.default, projectController_1.uploadProjectImageMiddleware, projectController_1.createProject);
+router.post("/projects", auth_1.default, projectController_1.uploadProjectImageMiddleware, projectController_1.createProject);
 // PUT /api/projects/:id
-router.put("/:id", auth_1.default, projectController_1.uploadProjectImageMiddleware, projectController_1.updateProject);
+router.put("/projects/:id", auth_1.default, projectController_1.uploadProjectImageMiddleware, projectController_1.updateProject);
 // DELETE /api/projects/:id
-router.delete("/:id", auth_1.default, projectController_1.deleteProject);
+router.delete("/projects/:id", auth_1.default, projectController_1.deleteProject);
 exports.default = router;

@@ -14,7 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.uploadProfileImageMiddleware = exports.deleteProfile = exports.updateProfile = exports.createProfile = exports.getProfile = exports.getAllProfiles = void 0;
 // Prisma Tools
-const client_1 = __importDefault(require("../../prisma/client"));
+const client_1 = require("../../prisma/client");
 // Validator
 const profileValidator_1 = require("../utils/validators/profileValidator");
 // Cloudinary
@@ -29,24 +29,24 @@ const upload = (0, multer_1.default)({
         fileSize: 5 * 1024 * 1024, // 5MB limit
     },
     fileFilter: (req, file, cb) => {
-        if (file.mimetype.startsWith('image/')) {
+        if (file.mimetype.startsWith("image/")) {
             cb(null, true);
         }
         else {
-            cb(new Error('Only image files are allowed!'), false);
+            cb(new Error("Only image files are allowed!"), false);
         }
-    }
+    },
 });
 const getAllProfiles = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const profiles = yield client_1.default.profile.findMany({
+        const profiles = yield client_1.prisma.profile.findMany({
             include: {
                 user: {
                     select: {
-                        email: true
-                    }
-                }
-            }
+                        email: true,
+                    },
+                },
+            },
         });
         res.json({ profiles });
     }
@@ -60,15 +60,15 @@ exports.getAllProfiles = getAllProfiles;
 const getProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const userId = req.userId;
-        const profile = yield client_1.default.profile.findUnique({
+        const profile = yield client_1.prisma.profile.findUnique({
             where: { userId },
             include: {
                 user: {
                     select: {
-                        email: true
-                    }
-                }
-            }
+                        email: true,
+                    },
+                },
+            },
         });
         if (!profile) {
             res.status(404).json({ message: "Profile not found" });
@@ -88,26 +88,31 @@ const createProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         const userId = req.userId;
         const parsed = profileValidator_1.profileCreateSchema.safeParse(req.body);
         if (!parsed.success) {
-            res
+            return res
                 .status(400)
                 .json({ message: "Invalid input", errors: parsed.error.flatten() });
-            return;
         }
         // Check if profile already exists
-        const existingProfile = yield client_1.default.profile.findUnique({
-            where: { userId }
+        const existingProfile = yield client_1.prisma.profile.findUnique({
+            where: { userId },
         });
         if (existingProfile) {
-            res.status(400).json({ message: "Profile already exists" });
-            return;
+            return res.status(400).json({ message: "Profile already exists" });
+        }
+        // Pastikan user ada
+        const user = yield client_1.prisma.user.findUnique({ where: { id: userId } });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
         }
         let imageUrl = null;
         // Handle image upload
         if (req.file) {
             imageUrl = yield (0, cloudinary_1.uploadToCloudinary)(req.file, "profile");
         }
-        const profile = yield client_1.default.profile.create({
-            data: Object.assign(Object.assign({ userId }, parsed.data), (imageUrl && { image: imageUrl }))
+        const profile = yield client_1.prisma.profile.create({
+            data: Object.assign(Object.assign(Object.assign({}, parsed.data), (imageUrl && { image: imageUrl })), { user: {
+                    connect: { id: userId },
+                } }),
         });
         res.status(201).json({ message: "Profile created", profile });
     }
@@ -115,7 +120,6 @@ const createProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         console.error("Error creating profile:", error);
         res.status(500).json({ message: "Failed to create profile", error });
     }
-    return;
 });
 exports.createProfile = createProfile;
 const updateProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -123,47 +127,49 @@ const updateProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         const userId = req.userId;
         const parsed = profileValidator_1.profileUpdateSchema.safeParse(req.body);
         if (!parsed.success) {
-            res
+            return res
                 .status(400)
                 .json({ message: "Invalid input", errors: parsed.error.flatten() });
-            return;
         }
-        // Check if profile exists
-        const existingProfile = yield client_1.default.profile.findUnique({
-            where: { userId }
+        // Cek apakah profile sudah ada
+        const existingProfile = yield client_1.prisma.profile.findUnique({
+            where: { userId },
         });
         if (!existingProfile) {
-            res.status(404).json({ message: "Profile not found" });
-            return;
+            return res.status(404).json({ message: "Profile not found" });
         }
         let imageUrl = null;
-        // Handle image upload
+        // Handle upload image baru
         if (req.file) {
             imageUrl = yield (0, cloudinary_1.uploadToCloudinary)(req.file, "profile");
-            // Delete old image from Cloudinary if exists
+            // Hapus image lama kalau ada
             if (existingProfile.image) {
-                yield (0, cloudinary_1.deleteFromCloudinary)(existingProfile.image);
+                try {
+                    yield (0, cloudinary_1.deleteFromCloudinary)(existingProfile.image);
+                }
+                catch (err) {
+                    console.warn("Failed to delete old image from Cloudinary:", err);
+                }
             }
         }
-        const profile = yield client_1.default.profile.update({
+        const profile = yield client_1.prisma.profile.update({
             where: { userId },
-            data: Object.assign(Object.assign({}, parsed.data), (imageUrl && { image: imageUrl }))
+            data: Object.assign(Object.assign({}, parsed.data), (imageUrl && { image: imageUrl })),
         });
-        res.json({ message: "Profile updated", profile });
+        return res.status(200).json({ message: "Profile updated", profile });
     }
     catch (error) {
         console.error("Error updating profile:", error);
-        res.status(500).json({ message: "Failed to update profile", error });
+        return res.status(500).json({ message: "Failed to update profile", error });
     }
-    return;
 });
 exports.updateProfile = updateProfile;
 const deleteProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const userId = req.userId;
         // Check if profile exists
-        const existingProfile = yield client_1.default.profile.findUnique({
-            where: { userId }
+        const existingProfile = yield client_1.prisma.profile.findUnique({
+            where: { userId },
         });
         if (!existingProfile) {
             res.status(404).json({ message: "Profile not found" });
@@ -174,8 +180,8 @@ const deleteProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             yield (0, cloudinary_1.deleteFromCloudinary)(existingProfile.image);
         }
         // Delete profile
-        yield client_1.default.profile.delete({
-            where: { userId }
+        yield client_1.prisma.profile.delete({
+            where: { userId },
         });
         res.json({ message: "Profile deleted" });
     }
@@ -187,4 +193,4 @@ const deleteProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.deleteProfile = deleteProfile;
 // Export upload middleware
-exports.uploadProfileImageMiddleware = upload.single('image');
+exports.uploadProfileImageMiddleware = upload.single("image");

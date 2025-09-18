@@ -8,13 +8,13 @@ const profileController_1 = require("../controllers/profileController");
 const auth_1 = __importDefault(require("../middlewares/auth"));
 const router = express_1.default.Router();
 // GET /api/profiles
-router.get("/", auth_1.default, profileController_1.getAllProfiles);
+router.get("/profile", profileController_1.getAllProfiles);
 // GET /api/profile
-router.get("/me", auth_1.default, profileController_1.getProfile);
+router.get("/me/:id", profileController_1.getProfile);
 // POST /api/profile
-router.post("/", auth_1.default, profileController_1.uploadProfileImageMiddleware, profileController_1.createProfile);
+router.post("/profile", auth_1.default, profileController_1.uploadProfileImageMiddleware, profileController_1.createProfile);
 // PUT /api/profile
-router.put("/", auth_1.default, profileController_1.uploadProfileImageMiddleware, profileController_1.updateProfile);
+router.put("/profile/:id", auth_1.default, profileController_1.uploadProfileImageMiddleware, profileController_1.updateProfile);
 // DELETE /api/profile
-router.delete("/", auth_1.default, profileController_1.deleteProfile);
+router.delete("/profile/:id", auth_1.default, profileController_1.deleteProfile);
 exports.default = router;

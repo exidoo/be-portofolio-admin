@@ -2,7 +2,7 @@
 import { Request, Response } from "express";
 
 // Prisma Tools
-import prisma from "../../prisma/client";
+import { prisma } from "../../prisma/client";
 
 // Validator
 import {

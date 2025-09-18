@@ -8,21 +8,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteExperience = exports.updateExperience = exports.createExperience = exports.getExperienceById = exports.getAllExperiences = void 0;
 // Prisma Tools
-const client_1 = __importDefault(require("../../prisma/client"));
+const client_1 = require("../../prisma/client");
 // Validator
 const experienceValidator_1 = require("../utils/validators/experienceValidator");
 const getAllExperiences = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const experiences = yield client_1.default.experience.findMany({
+        const experiences = yield client_1.prisma.experience.findMany({
             orderBy: {
-                startDate: 'desc'
-            }
+                startDate: "desc",
+            },
         });
         res.json({ experiences });
     }
@@ -36,8 +33,8 @@ exports.getAllExperiences = getAllExperiences;
 const getExperienceById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        const experience = yield client_1.default.experience.findUnique({
-            where: { id }
+        const experience = yield client_1.prisma.experience.findUnique({
+            where: { id },
         });
         if (!experience) {
             res.status(404).json({ message: "Experience not found" });
@@ -61,8 +58,8 @@ const createExperience = (req, res) => __awaiter(void 0, void 0, void 0, functio
                 .json({ message: "Invalid input", errors: parsed.error.flatten() });
             return;
         }
-        const experience = yield client_1.default.experience.create({
-            data: parsed.data
+        const experience = yield client_1.prisma.experience.create({
+            data: parsed.data,
         });
         res.status(201).json({ message: "Experience created", experience });
     }
@@ -84,17 +81,17 @@ const updateExperience = (req, res) => __awaiter(void 0, void 0, void 0, functio
             return;
         }
         // Check if experience exists
-        const existingExperience = yield client_1.default.experience.findUnique({
-            where: { id }
+        const existingExperience = yield client_1.prisma.experience.findUnique({
+            where: { id },
         });
         if (!existingExperience) {
             res.status(404).json({ message: "Experience not found" });
             return;
         }
         // Update experience
-        const experience = yield client_1.default.experience.update({
+        const experience = yield client_1.prisma.experience.update({
             where: { id },
-            data: parsed.data
+            data: parsed.data,
         });
         res.json({ message: "Experience updated", experience });
     }
@@ -109,16 +106,16 @@ const deleteExperience = (req, res) => __awaiter(void 0, void 0, void 0, functio
     try {
         const { id } = req.params;
         // Check if experience exists
-        const existingExperience = yield client_1.default.experience.findUnique({
-            where: { id }
+        const existingExperience = yield client_1.prisma.experience.findUnique({
+            where: { id },
         });
         if (!existingExperience) {
             res.status(404).json({ message: "Experience not found" });
             return;
         }
         // Delete experience
-        yield client_1.default.experience.delete({
-            where: { id }
+        yield client_1.prisma.experience.delete({
+            where: { id },
         });
         res.json({ message: "Experience deleted" });
     }

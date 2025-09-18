@@ -14,7 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.uploadProjectImageMiddleware = exports.deleteProject = exports.updateProject = exports.createProject = exports.getProjectById = exports.getAllProjects = void 0;
 // Prisma Tools
-const client_1 = __importDefault(require("../../prisma/client"));
+const client_1 = require("../../prisma/client");
 // Validator
 const projectValidator_1 = require("../utils/validators/projectValidator");
 // Cloudinary
@@ -39,7 +39,7 @@ const upload = (0, multer_1.default)({
 });
 const getAllProjects = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const projects = yield client_1.default.project.findMany({
+        const projects = yield client_1.prisma.project.findMany({
             orderBy: {
                 createdAt: "desc",
             },
@@ -56,7 +56,7 @@ exports.getAllProjects = getAllProjects;
 const getProjectById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        const project = yield client_1.default.project.findUnique({
+        const project = yield client_1.prisma.project.findUnique({
             where: { id },
         });
         if (!project) {
@@ -74,6 +74,17 @@ const getProjectById = (req, res) => __awaiter(void 0, void 0, void 0, function*
 exports.getProjectById = getProjectById;
 const createProject = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        // Convert technologies ke array kalau dikirim sebagai string
+        if (req.body.technologies) {
+            try {
+                req.body.technologies = JSON.parse(req.body.technologies);
+            }
+            catch (_a) {
+                req.body.technologies = req.body.technologies
+                    .split(",")
+                    .map((t) => t.trim());
+            }
+        }
         const parsed = projectValidator_1.projectCreateSchema.safeParse(req.body);
         if (!parsed.success) {
             res
@@ -82,11 +93,10 @@ const createProject = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             return;
         }
         let imageUrl = "";
-        // Handle image upload
         if (req.file) {
             imageUrl = yield (0, cloudinary_1.uploadToCloudinary)(req.file, "projects");
         }
-        const project = yield client_1.default.project.create({
+        const project = yield client_1.prisma.project.create({
             data: Object.assign(Object.assign({}, parsed.data), { image: imageUrl }),
         });
         res.status(201).json({ message: "Project created", project });
@@ -95,12 +105,22 @@ const createProject = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         console.error("Error creating project:", error);
         res.status(500).json({ message: "Failed to create project", error });
     }
-    return;
 });
 exports.createProject = createProject;
 const updateProject = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
+        // Convert technologies ke array kalau dikirim sebagai string
+        if (req.body.technologies) {
+            try {
+                req.body.technologies = JSON.parse(req.body.technologies);
+            }
+            catch (_a) {
+                req.body.technologies = req.body.technologies
+                    .split(",")
+                    .map((t) => t.trim());
+            }
+        }
         const parsed = projectValidator_1.projectUpdateSchema.safeParse(req.body);
         if (!parsed.success) {
             res
@@ -109,7 +129,7 @@ const updateProject = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             return;
         }
         // Check if project exists
-        const existingProject = yield client_1.default.project.findUnique({
+        const existingProject = yield client_1.prisma.project.findUnique({
             where: { id },
         });
         if (!existingProject) {
@@ -126,7 +146,7 @@ const updateProject = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             }
         }
         // Update project
-        const project = yield client_1.default.project.update({
+        const project = yield client_1.prisma.project.update({
             where: { id },
             data: Object.assign(Object.assign({}, parsed.data), { image: imageUrl }),
         });
@@ -143,7 +163,7 @@ const deleteProject = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     try {
         const { id } = req.params;
         // Check if project exists
-        const existingProject = yield client_1.default.project.findUnique({
+        const existingProject = yield client_1.prisma.project.findUnique({
             where: { id },
         });
         if (!existingProject) {
@@ -155,7 +175,7 @@ const deleteProject = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             yield (0, cloudinary_1.deleteFromCloudinary)(existingProject.image);
         }
         // Delete project
-        yield client_1.default.project.delete({
+        yield client_1.prisma.project.delete({
             where: { id },
         });
         res.json({ message: "Project deleted" });

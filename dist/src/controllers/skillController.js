@@ -8,21 +8,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteSkill = exports.updateSkill = exports.createSkill = exports.getSkillById = exports.getAllSkills = void 0;
 // Prisma Tools
-const client_1 = __importDefault(require("../../prisma/client"));
+const client_1 = require("../../prisma/client");
 // Validator
 const skillValidator_1 = require("../utils/validators/skillValidator");
 const getAllSkills = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const skills = yield client_1.default.skill.findMany({
+        const skills = yield client_1.prisma.skill.findMany({
             orderBy: {
-                createdAt: 'desc'
-            }
+                createdAt: "desc",
+            },
         });
         res.json({ skills });
     }
@@ -36,8 +33,8 @@ exports.getAllSkills = getAllSkills;
 const getSkillById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        const skill = yield client_1.default.skill.findUnique({
-            where: { id }
+        const skill = yield client_1.prisma.skill.findUnique({
+            where: { id },
         });
         if (!skill) {
             res.status(404).json({ message: "Skill not found" });
@@ -61,8 +58,8 @@ const createSkill = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 .json({ message: "Invalid input", errors: parsed.error.flatten() });
             return;
         }
-        const skill = yield client_1.default.skill.create({
-            data: parsed.data
+        const skill = yield client_1.prisma.skill.create({
+            data: parsed.data,
         });
         res.status(201).json({ message: "Skill created", skill });
     }
@@ -84,17 +81,17 @@ const updateSkill = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             return;
         }
         // Check if skill exists
-        const existingSkill = yield client_1.default.skill.findUnique({
-            where: { id }
+        const existingSkill = yield client_1.prisma.skill.findUnique({
+            where: { id },
         });
         if (!existingSkill) {
             res.status(404).json({ message: "Skill not found" });
             return;
         }
         // Update skill
-        const skill = yield client_1.default.skill.update({
+        const skill = yield client_1.prisma.skill.update({
             where: { id },
-            data: parsed.data
+            data: parsed.data,
         });
         res.json({ message: "Skill updated", skill });
     }
@@ -109,16 +106,16 @@ const deleteSkill = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     try {
         const { id } = req.params;
         // Check if skill exists
-        const existingSkill = yield client_1.default.skill.findUnique({
-            where: { id }
+        const existingSkill = yield client_1.prisma.skill.findUnique({
+            where: { id },
         });
         if (!existingSkill) {
             res.status(404).json({ message: "Skill not found" });
             return;
         }
         // Delete skill
-        yield client_1.default.skill.delete({
-            where: { id }
+        yield client_1.prisma.skill.delete({
+            where: { id },
         });
         res.json({ message: "Skill deleted" });
     }

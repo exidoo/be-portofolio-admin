@@ -14,7 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.uploadTestimonialImageMiddleware = exports.deleteTestimonial = exports.updateTestimonial = exports.createTestimonial = exports.getApprovedTestimonials = exports.getTestimonialById = exports.getAllTestimonials = void 0;
 // Prisma Tools
-const client_1 = __importDefault(require("../../prisma/client"));
+const client_1 = require("../../prisma/client");
 // Validator
 const testimonialValidator_1 = require("../utils/validators/testimonialValidator");
 // Cloudinary
@@ -29,20 +29,20 @@ const upload = (0, multer_1.default)({
         fileSize: 5 * 1024 * 1024, // 5MB limit
     },
     fileFilter: (req, file, cb) => {
-        if (file.mimetype.startsWith('image/')) {
+        if (file.mimetype.startsWith("image/")) {
             cb(null, true);
         }
         else {
-            cb(new Error('Only image files are allowed!'), false);
+            cb(new Error("Only image files are allowed!"), false);
         }
-    }
+    },
 });
 const getAllTestimonials = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const testimonials = yield client_1.default.testimonial.findMany({
+        const testimonials = yield client_1.prisma.testimonial.findMany({
             orderBy: {
-                createdAt: 'desc'
-            }
+                createdAt: "desc",
+            },
         });
         res.json({ testimonials });
     }
@@ -56,8 +56,8 @@ exports.getAllTestimonials = getAllTestimonials;
 const getTestimonialById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        const testimonial = yield client_1.default.testimonial.findUnique({
-            where: { id }
+        const testimonial = yield client_1.prisma.testimonial.findUnique({
+            where: { id },
         });
         if (!testimonial) {
             res.status(404).json({ message: "Testimonial not found" });
@@ -74,19 +74,21 @@ const getTestimonialById = (req, res) => __awaiter(void 0, void 0, void 0, funct
 exports.getTestimonialById = getTestimonialById;
 const getApprovedTestimonials = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const testimonials = yield client_1.default.testimonial.findMany({
+        const testimonials = yield client_1.prisma.testimonial.findMany({
             where: {
-                approved: true
+                approved: true,
             },
             orderBy: {
-                createdAt: 'desc'
-            }
+                createdAt: "desc",
+            },
         });
         res.json({ testimonials });
     }
     catch (error) {
         console.error("Error fetching approved testimonials:", error);
-        res.status(500).json({ message: "Failed to fetch approved testimonials", error });
+        res
+            .status(500)
+            .json({ message: "Failed to fetch approved testimonials", error });
     }
     return;
 });
@@ -106,10 +108,10 @@ const createTestimonial = (req, res) => __awaiter(void 0, void 0, void 0, functi
         if (req.file) {
             imageUrl = yield (0, cloudinary_1.uploadToCloudinary)(req.file, "testimonials");
         }
-        const testimonial = yield client_1.default.testimonial.create({
+        const testimonial = yield client_1.prisma.testimonial.create({
             data: Object.assign(Object.assign(Object.assign({}, parsed.data), (imageUrl && { image: imageUrl })), { 
                 // Default to not approved
-                approved: (_a = parsed.data.approved) !== null && _a !== void 0 ? _a : false })
+                approved: (_a = parsed.data.approved) !== null && _a !== void 0 ? _a : false }),
         });
         res.status(201).json({ message: "Testimonial created", testimonial });
     }
@@ -131,8 +133,8 @@ const updateTestimonial = (req, res) => __awaiter(void 0, void 0, void 0, functi
             return;
         }
         // Check if testimonial exists
-        const existingTestimonial = yield client_1.default.testimonial.findUnique({
-            where: { id }
+        const existingTestimonial = yield client_1.prisma.testimonial.findUnique({
+            where: { id },
         });
         if (!existingTestimonial) {
             res.status(404).json({ message: "Testimonial not found" });
@@ -148,9 +150,9 @@ const updateTestimonial = (req, res) => __awaiter(void 0, void 0, void 0, functi
             }
         }
         // Update testimonial
-        const testimonial = yield client_1.default.testimonial.update({
+        const testimonial = yield client_1.prisma.testimonial.update({
             where: { id },
-            data: Object.assign(Object.assign({}, parsed.data), (imageUrl && { image: imageUrl }))
+            data: Object.assign(Object.assign({}, parsed.data), (imageUrl && { image: imageUrl })),
         });
         res.json({ message: "Testimonial updated", testimonial });
     }
@@ -165,8 +167,8 @@ const deleteTestimonial = (req, res) => __awaiter(void 0, void 0, void 0, functi
     try {
         const { id } = req.params;
         // Check if testimonial exists
-        const existingTestimonial = yield client_1.default.testimonial.findUnique({
-            where: { id }
+        const existingTestimonial = yield client_1.prisma.testimonial.findUnique({
+            where: { id },
         });
         if (!existingTestimonial) {
             res.status(404).json({ message: "Testimonial not found" });
@@ -177,8 +179,8 @@ const deleteTestimonial = (req, res) => __awaiter(void 0, void 0, void 0, functi
             yield (0, cloudinary_1.deleteFromCloudinary)(existingTestimonial.image);
         }
         // Delete testimonial
-        yield client_1.default.testimonial.delete({
-            where: { id }
+        yield client_1.prisma.testimonial.delete({
+            where: { id },
         });
         res.json({ message: "Testimonial deleted" });
     }
@@ -190,4 +192,4 @@ const deleteTestimonial = (req, res) => __awaiter(void 0, void 0, void 0, functi
 });
 exports.deleteTestimonial = deleteTestimonial;
 // Export upload middleware
-exports.uploadTestimonialImageMiddleware = upload.single('image');
+exports.uploadTestimonialImageMiddleware = upload.single("image");

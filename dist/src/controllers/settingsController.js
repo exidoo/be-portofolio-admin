@@ -8,23 +8,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateSettings = exports.getSettings = void 0;
 // Prisma Tools
-const client_1 = __importDefault(require("../../prisma/client"));
+const client_1 = require("../../prisma/client");
 // Validator
 const settingsValidator_1 = require("../utils/validators/settingsValidator");
 const getSettings = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         // Get the first (and only) settings record
-        let settings = yield client_1.default.settings.findFirst();
+        let settings = yield client_1.prisma.settings.findFirst();
         // If no settings exist, create default settings
         if (!settings) {
-            settings = yield client_1.default.settings.create({
-                data: {}
+            settings = yield client_1.prisma.settings.create({
+                data: {},
             });
         }
         res.json({ settings });
@@ -46,26 +43,26 @@ const updateSettings = (req, res) => __awaiter(void 0, void 0, void 0, function*
             return;
         }
         // Get the first (and only) settings record
-        let settings = yield client_1.default.settings.findFirst();
+        let settings = yield client_1.prisma.settings.findFirst();
         // If no settings exist, create new settings
         if (!settings) {
-            settings = yield client_1.default.settings.create({
+            settings = yield client_1.prisma.settings.create({
                 data: {
                     themeColor: parsed.data.themeColor || null,
                     seoTitle: parsed.data.seoTitle || null,
-                    seoDescription: parsed.data.seoDescription || null
-                }
+                    seoDescription: parsed.data.seoDescription || null,
+                },
             });
         }
         else {
             // Update existing settings
-            settings = yield client_1.default.settings.update({
+            settings = yield client_1.prisma.settings.update({
                 where: { id: settings.id },
                 data: {
                     themeColor: parsed.data.themeColor,
                     seoTitle: parsed.data.seoTitle,
-                    seoDescription: parsed.data.seoDescription
-                }
+                    seoDescription: parsed.data.seoDescription,
+                },
             });
         }
         res.json({ message: "Settings updated", settings });

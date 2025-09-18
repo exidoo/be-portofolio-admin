@@ -6,7 +6,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
 // Prisma Tools
-import prisma from "../../prisma/client";
+import { prisma } from "../../prisma/client";
 
 // Validators
 import { registerSchema, loginSchema } from "../utils/validators/authValidator";

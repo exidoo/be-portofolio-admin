@@ -17,10 +17,10 @@ exports.login = exports.register = void 0;
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 // Prisma Tools
-const client_1 = __importDefault(require("../../prisma/client"));
+const client_1 = require("../../prisma/client");
 // Validators
 const authValidator_1 = require("../utils/validators/authValidator");
-const JWT_SECRET = process.env.JWT_SECRET || "cafe_secret";
+const JWT_SECRET = process.env.JWT_SECRET || "portofolio_secret";
 const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const parsed = authValidator_1.registerSchema.safeParse(req.body);
@@ -31,12 +31,12 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         }
         const { name, email, password } = req.body;
         // Check if user exists
-        const existingUser = yield client_1.default.user.findUnique({ where: { email } });
+        const existingUser = yield client_1.prisma.user.findUnique({ where: { email } });
         if (existingUser) {
             return res.status(400).json({ message: "Email already exists" });
         }
         const hashed = yield bcrypt_1.default.hash(password, 10);
-        const user = yield client_1.default.user.create({
+        const user = yield client_1.prisma.user.create({
             data: {
                 email,
                 password: hashed,
@@ -59,14 +59,19 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 .json({ message: "Invalid input", errors: parsed.error.flatten() });
         }
         const { email, password } = req.body;
-        const user = yield client_1.default.user.findUnique({ where: { email } });
+        const user = yield client_1.prisma.user.findUnique({ where: { email } });
         if (!user)
             return res.status(404).json({ message: "User not found" });
         const match = yield bcrypt_1.default.compare(password, user.password);
         if (!match)
             return res.status(401).json({ message: "Invalid credentials" });
-        const token = jsonwebtoken_1.default.sign({ id: user.id }, JWT_SECRET, {
-            expiresIn: "7d",
+        const token = jsonwebtoken_1.default.sign({ id: user.id }, JWT_SECRET, { expiresIn: "15m" });
+        const refreshToken = jsonwebtoken_1.default.sign({ id: user.id }, JWT_SECRET, {
+            expiresIn: "30d",
+        });
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
         });
         res.json({ message: "Login successful", token });
     }

@@ -8,21 +8,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteEducation = exports.updateEducation = exports.createEducation = exports.getEducationById = exports.getAllEducations = void 0;
 // Prisma Tools
-const client_1 = __importDefault(require("../../prisma/client"));
+const client_1 = require("../../prisma/client");
 // Validator
 const educationValidator_1 = require("../utils/validators/educationValidator");
 const getAllEducations = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const educations = yield client_1.default.education.findMany({
+        const educations = yield client_1.prisma.education.findMany({
             orderBy: {
-                startDate: 'desc'
-            }
+                startDate: "desc",
+            },
         });
         res.json({ educations });
     }
@@ -36,8 +33,8 @@ exports.getAllEducations = getAllEducations;
 const getEducationById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        const education = yield client_1.default.education.findUnique({
-            where: { id }
+        const education = yield client_1.prisma.education.findUnique({
+            where: { id },
         });
         if (!education) {
             res.status(404).json({ message: "Education not found" });
@@ -61,8 +58,8 @@ const createEducation = (req, res) => __awaiter(void 0, void 0, void 0, function
                 .json({ message: "Invalid input", errors: parsed.error.flatten() });
             return;
         }
-        const education = yield client_1.default.education.create({
-            data: parsed.data
+        const education = yield client_1.prisma.education.create({
+            data: parsed.data,
         });
         res.status(201).json({ message: "Education created", education });
     }
@@ -84,17 +81,17 @@ const updateEducation = (req, res) => __awaiter(void 0, void 0, void 0, function
             return;
         }
         // Check if education exists
-        const existingEducation = yield client_1.default.education.findUnique({
-            where: { id }
+        const existingEducation = yield client_1.prisma.education.findUnique({
+            where: { id },
         });
         if (!existingEducation) {
             res.status(404).json({ message: "Education not found" });
             return;
         }
         // Update education
-        const education = yield client_1.default.education.update({
+        const education = yield client_1.prisma.education.update({
             where: { id },
-            data: parsed.data
+            data: parsed.data,
         });
         res.json({ message: "Education updated", education });
     }
@@ -109,16 +106,16 @@ const deleteEducation = (req, res) => __awaiter(void 0, void 0, void 0, function
     try {
         const { id } = req.params;
         // Check if education exists
-        const existingEducation = yield client_1.default.education.findUnique({
-            where: { id }
+        const existingEducation = yield client_1.prisma.education.findUnique({
+            where: { id },
         });
         if (!existingEducation) {
             res.status(404).json({ message: "Education not found" });
             return;
         }
         // Delete education
-        yield client_1.default.education.delete({
-            where: { id }
+        yield client_1.prisma.education.delete({
+            where: { id },
         });
         res.json({ message: "Education deleted" });
     }

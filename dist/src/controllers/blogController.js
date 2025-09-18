@@ -14,7 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.uploadBlogImageMiddleware = exports.deleteBlog = exports.updateBlog = exports.createBlog = exports.getPublishedBlogById = exports.getBlogById = exports.getPublishedBlogs = exports.getAllBlogs = void 0;
 // Prisma Tools
-const client_1 = __importDefault(require("../../prisma/client"));
+const client_1 = require("../../prisma/client");
 // Validator
 const blogValidator_1 = require("../utils/validators/blogValidator");
 // Cloudinary
@@ -39,7 +39,7 @@ const upload = (0, multer_1.default)({
 });
 const getAllBlogs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const blogs = yield client_1.default.blog.findMany({
+        const blogs = yield client_1.prisma.blog.findMany({
             orderBy: {
                 createdAt: "desc",
             },
@@ -55,7 +55,7 @@ const getAllBlogs = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.getAllBlogs = getAllBlogs;
 const getPublishedBlogs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const blogs = yield client_1.default.blog.findMany({
+        const blogs = yield client_1.prisma.blog.findMany({
             where: {
                 published: true,
             },
@@ -75,7 +75,7 @@ exports.getPublishedBlogs = getPublishedBlogs;
 const getBlogById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        const blog = yield client_1.default.blog.findUnique({
+        const blog = yield client_1.prisma.blog.findUnique({
             where: { id },
         });
         if (!blog) {
@@ -94,7 +94,7 @@ exports.getBlogById = getBlogById;
 const getPublishedBlogById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        const blog = yield client_1.default.blog.findUnique({
+        const blog = yield client_1.prisma.blog.findUnique({
             where: {
                 id,
                 published: true,
@@ -127,7 +127,7 @@ const createBlog = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         if (req.file) {
             imageUrl = yield (0, cloudinary_1.uploadToCloudinary)(req.file, "blogs");
         }
-        const blog = yield client_1.default.blog.create({
+        const blog = yield client_1.prisma.blog.create({
             data: Object.assign(Object.assign({}, parsed.data), (imageUrl && { image: imageUrl })),
         });
         res.status(201).json({ message: "Blog created", blog });
@@ -150,7 +150,7 @@ const updateBlog = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             return;
         }
         // Check if blog exists
-        const existingBlog = yield client_1.default.blog.findUnique({
+        const existingBlog = yield client_1.prisma.blog.findUnique({
             where: { id },
         });
         if (!existingBlog) {
@@ -167,7 +167,7 @@ const updateBlog = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             }
         }
         // Update blog
-        const blog = yield client_1.default.blog.update({
+        const blog = yield client_1.prisma.blog.update({
             where: { id },
             data: Object.assign(Object.assign({}, parsed.data), (imageUrl && { image: imageUrl })),
         });
@@ -184,7 +184,7 @@ const deleteBlog = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     try {
         const { id } = req.params;
         // Check if blog exists
-        const existingBlog = yield client_1.default.blog.findUnique({
+        const existingBlog = yield client_1.prisma.blog.findUnique({
             where: { id },
         });
         if (!existingBlog) {
@@ -196,7 +196,7 @@ const deleteBlog = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             yield (0, cloudinary_1.deleteFromCloudinary)(existingBlog.image);
         }
         // Delete blog
-        yield client_1.default.blog.delete({
+        yield client_1.prisma.blog.delete({
             where: { id },
         });
         res.json({ message: "Blog deleted" });
