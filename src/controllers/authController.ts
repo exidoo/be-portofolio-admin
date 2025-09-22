@@ -40,6 +40,7 @@ export const register = async (req: Request, res: Response) => {
 
     res.status(201).json({ message: "User registered", user });
   } catch (error) {
+    console.error("Register error:", error);
     res.status(500).json({ message: "Register failed", error });
   }
   return;
@@ -56,13 +57,28 @@ export const login = async (req: Request, res: Response) => {
 
     const { email, password } = req.body;
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: {
+        Profile: true, // ambil profile (1-1 relasi)
+      },
+    });
+
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(401).json({ message: "Invalid credentials" });
 
-    const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: "15m" });
+    // Generate JWT hanya isi field penting
+    const token = jwt.sign(
+      {
+        id: user.id,
+        email: user.email,
+      },
+      JWT_SECRET,
+      { expiresIn: "15m" }
+    );
+
     const refreshToken = jwt.sign({ id: user.id }, JWT_SECRET, {
       expiresIn: "30d",
     });
@@ -72,9 +88,35 @@ export const login = async (req: Request, res: Response) => {
       secure: process.env.NODE_ENV === "production",
     });
 
-    res.json({ message: "Login successful", token });
+    // Format response sesuai kebutuhan
+    res.json({
+      content: {
+        user: {
+          id: user.id,
+          email: user.email,
+          profile: user.Profile
+            ? {
+                id: user.Profile.id,
+                name: user.Profile.name,
+                title: user.Profile.title,
+                bio: user.Profile.bio,
+                image: user.Profile.image,
+                email: user.Profile.email,
+                phone: user.Profile.phone,
+                location: user.Profile.location,
+                socialLinks: user.Profile.socialLinks,
+                createdAt: user.Profile.createdAt,
+                updatedAt: user.Profile.updatedAt,
+              }
+            : null,
+        },
+        token,
+      },
+      message: "Successfully Logged In!",
+      errors: [],
+    });
   } catch (error) {
+    console.error("Login error:", error);
     res.status(500).json({ message: "Login failed", error });
   }
-  return;
 };

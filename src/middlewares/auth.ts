@@ -8,21 +8,22 @@ interface AuthRequest extends Request {
 }
 
 const verifyToken = (req: AuthRequest, res: Response, next: NextFunction) => {
-  // Get token
-  const token = req.headers["authorization"];
-  if (!token) {
-    res.status(401).json({ message: "Unauthenticated." });
-    return;
+  let authHeader = req.headers["authorization"];
+
+  if (!authHeader) {
+    return res.status(401).json({ message: "Unauthenticated." });
   }
 
-  // Verify token
-  jwt.verify(token, process.env.JWT_SECRET as string, (err, decoded) => {
+  // kalau ada prefix Bearer, buang dulu
+  if (authHeader.startsWith("Bearer ")) {
+    authHeader = authHeader.split(" ")[1];
+  }
+
+  jwt.verify(authHeader, process.env.JWT_SECRET as string, (err, decoded) => {
     if (err || !decoded) {
-      res.status(401).json({ message: "Invalid token" });
-      return;
+      return res.status(401).json({ message: "Invalid token" });
     }
 
-    // kalau decoded.id ada, simpan ke req.userId
     const payload = decoded as JwtPayload & { id: string | number };
     req.userId = payload.id;
 
