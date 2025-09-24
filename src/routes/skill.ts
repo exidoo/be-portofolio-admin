@@ -17,12 +17,12 @@ router.get("/skills", getAllSkills);
 router.get("/skills/:id", getSkillById);
 
 // POST /api/skills
-router.post("/skills", verifyToken, createSkill);
+router.post("/skills", createSkill);
 
 // PUT /api/skills/:id
-router.put("/skills/:id", verifyToken, updateSkill);
+router.put("/skills/:id", updateSkill);
 
 // DELETE /api/skills/:id
-router.delete("/skills/:id", verifyToken, deleteSkill);
+router.delete("/skills/:id", deleteSkill);
 
 export default router;

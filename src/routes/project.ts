@@ -18,22 +18,17 @@ router.get("/projects", getAllProjects);
 router.get("/projects/:id", getProjectById);
 
 // POST /api/projects
-router.post(
-  "/projects",
-  verifyToken,
-  uploadProjectImageMiddleware,
-  createProject
-);
+router.post("/projects", uploadProjectImageMiddleware, createProject);
 
 // PUT /api/projects/:id
 router.put(
   "/projects/:id",
-  verifyToken,
+
   uploadProjectImageMiddleware,
   updateProject
 );
 
 // DELETE /api/projects/:id
-router.delete("/projects/:id", verifyToken, deleteProject);
+router.delete("/projects/:id", deleteProject);
 
 export default router;
